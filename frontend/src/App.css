@@ -1,0 +1,152 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #f0f7f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card.center {
+  text-align: center;
+  align-items: center;
+}
+
+h1 {
+  font-size: 1.6rem;
+  color: #2d6a4f;
+}
+
+h2 {
+  font-size: 1.3rem;
+  color: #2d6a4f;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.options button {
+  padding: 0.4rem 0.9rem;
+  border: 2px solid #d4edda;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: all 0.15s;
+}
+
+.options button:hover {
+  border-color: #52b788;
+}
+
+.options button.active {
+  background: #52b788;
+  border-color: #52b788;
+  color: white;
+  font-weight: 600;
+}
+
+button.primary {
+  width: 100%;
+  padding: 0.8rem;
+  background: #2d6a4f;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+button.primary:hover {
+  background: #1b4332;
+}
+
+button.primary:disabled {
+  background: #95d5b2;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  width: 100%;
+  padding: 0.7rem;
+  background: transparent;
+  color: #2d6a4f;
+  border: 2px solid #d4edda;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button.secondary:hover {
+  border-color: #52b788;
+}
+
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+li {
+  color: #2d6a4f;
+  font-size: 0.95rem;
+}
+
+.meta {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 2px solid #d4edda;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #52b788;
+}
