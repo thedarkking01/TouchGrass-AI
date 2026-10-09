@@ -1,7 +1,15 @@
+import os
+import json
+import re
+import time as time_module
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import random
+from google import genai
+
+load_dotenv()
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI()
 
@@ -12,48 +20,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FAKE_MISSIONS = {
-    "nature": [
-        {
-            "title": "The 30-Minute Nature Detective",
-            "description": "Head outside and investigate the natural world around you.",
-            "tasks": ["Find 3 different plants", "Spot 1 bird or insect", "Touch something rough and something smooth"],
-        },
-        {
-            "title": "Cloud Watcher",
-            "description": "Find a good spot and just look up.",
-            "tasks": ["Identify 2 cloud shapes", "Lie on the grass for 5 minutes", "Notice the wind direction"],
-        },
-    ],
-    "fitness": [
-        {
-            "title": "The Explorer Sprint",
-            "description": "Pick a direction and walk as fast as you can.",
-            "tasks": ["Walk 10 minutes without stopping", "Find a hill and climb it", "Do 10 jumping jacks outside"],
-        },
-    ],
-    "explore": [
-        {
-            "title": "Uncharted Street",
-            "description": "Walk down a street you've never been on.",
-            "tasks": ["Find something you've never noticed before", "Read 3 street signs", "Discover one new thing about your neighborhood"],
-        },
-    ],
-    "photo": [
-        {
-            "title": "The Texture Hunt",
-            "description": "Go outside and photograph interesting textures.",
-            "tasks": ["Photograph bark on a tree", "Find an interesting shadow", "Capture something colorful"],
-        },
-    ],
-    "surprise": [
-        {
-            "title": "Random Adventure",
-            "description": "Flip a mental coin at every corner — left or right.",
-            "tasks": ["Walk for 20 minutes with no destination", "Say hi to one stranger", "Find something that makes you smile"],
-        },
-    ],
+FALLBACK_MISSION = {
+    "title": "The Simple Wander",
+    "description": "Step outside and walk with no destination in mind.",
+    "tasks": ["Walk for at least 10 minutes", "Notice 3 things you've never seen before", "Take one deep breath of fresh air"],
 }
+
+PROMPT_TEMPLATE = """
+You are TouchGrass AI. Your only job is to get people off their screens and outside.
+
+Generate a personalized outdoor mission for someone with these preferences:
+- Available time: {time}
+- Energy level: {energy}
+- Interest: {interest}
+
+Respond ONLY with a valid JSON object in this exact format, no markdown, no explanation:
+{{
+  "title": "short catchy mission name",
+  "description": "one sentence setting the scene",
+  "tasks": ["task 1", "task 2", "task 3"]
+}}
+"""
 
 
 class MissionRequest(BaseModel):
@@ -64,12 +51,31 @@ class MissionRequest(BaseModel):
 
 @app.post("/generate-mission")
 def generate_mission(req: MissionRequest):
-    pool = FAKE_MISSIONS.get(req.interest, FAKE_MISSIONS["surprise"])
-    mission = random.choice(pool)
-    return {
-        "title": mission["title"],
-        "description": mission["description"],
-        "tasks": mission["tasks"],
-        "time": req.time,
-        "energy": req.energy,
-    }
+    prompt = PROMPT_TEMPLATE.format(
+        time=req.time,
+        energy=req.energy,
+        interest=req.interest,
+    )
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt,
+            )
+            raw = response.text.strip()
+            raw = re.sub(r"^```(?:json)?\s*", "", raw)
+            raw = re.sub(r"\s*```$", "", raw)
+            mission = json.loads(raw)
+            return {
+                "title": mission["title"],
+                "description": mission["description"],
+                "tasks": mission["tasks"],
+                "time": req.time,
+                "energy": req.energy,
+                "ai": True,
+            }
+        except Exception as e:
+            print(f"Gemini attempt {attempt + 1} failed: {e}")
+            if attempt < 2:
+                time_module.sleep(2)
+    return {**FALLBACK_MISSION, "time": req.time, "energy": req.energy, "ai": False}
